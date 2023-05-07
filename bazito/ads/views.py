@@ -1,15 +1,17 @@
 import json
 
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import DetailView
 
 from ads.models import AdsModel
 
 
-@csrf_exempt
-def page_ads(request):
-    if request.method == "GET":
+@method_decorator(csrf_exempt, name='dispatch')
+class AdsView(View):
+    def get(self, request):
         ads = AdsModel.objects.all()
         response = []
 
@@ -27,7 +29,7 @@ def page_ads(request):
                             json_dumps_params={'ensure_ascii': False},
                             status=200)
 
-    elif request.method == 'POST':
+    def post(self, request):
         ad_data = json.loads(request.body)
         ad = AdsModel.objects.create(
             name=ad_data['name'],
@@ -42,10 +44,12 @@ def page_ads(request):
                             status=201)
 
 
-def page_ad_by_id(request, pk: int):
-    if request.method == "GET":
+class AdDetailView(DetailView):
+    model = AdsModel
+
+    def get(self, request, *args, **kwargs):
         try:
-            ad = AdsModel.objects.get(pk=pk)
+            ad = self.get_object()
             response = {
                 'id': ad.id,
                 'name': ad.name,
