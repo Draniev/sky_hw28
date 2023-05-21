@@ -6,6 +6,6 @@
 ```shell
 python3 manage.py makemigrations
 python3 manage.py mirgate
-python3 manage.py loaddata ../datasets/ads.csv
-python3 manage.py loaddata ../datasets/cotagories.csv
+python3 manage.py loaddata ../datasets/ads.json
+python3 manage.py loaddata ../datasets/categories.json
 ```
