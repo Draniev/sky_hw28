@@ -27,9 +27,10 @@ def save_csv_to_json(csv_list: list):
 
 if __name__ == '__main__':
     csv_list = [
-        ('../datasets/categories.csv', 'categories.CatModel'),
-        ('../datasets/ads.csv', 'ads.AdsModel'),
+        # ('../datasets/category.csv', 'ads.CatModel'),
+        # ('../datasets/ad.csv', 'ads.AdsModel'),
+        ('../datasets/location.csv', 'users.LocModel'),
+        ('../datasets/user.csv', 'users.UserModel'),
     ]
 
     save_csv_to_json(csv_list)
-

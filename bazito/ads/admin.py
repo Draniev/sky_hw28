@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from ads.models import AdsModel, CatModel
+
+
+admin.site.register(AdsModel)
+admin.site.register(CatModel)
