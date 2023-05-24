@@ -27,7 +27,7 @@ class AdsView(ListView):
                 'description': ad.description,
                 'is_published': ad.is_published,
                 'category': ad.category.name,
-                # 'image': ad.image,
+                'image': ad.image.url if ad.image else None,
             })
         return JsonResponse(response,
                             safe=False,
@@ -79,6 +79,22 @@ class AdUpdateView(UpdateView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class AdImageUpdateView(UpdateView):
+    model = AdsView
+    fields = ['image']
+
+    def post(self, request, *args, **kwargs):
+        # ad_data = json.loads(request.body)
+
+        self.object.image = request.FILES['image']
+        self.object.save()
+        return JsonResponse({'Status': 'OK'},
+                            safe=False,
+                            json_dumps_params={'ensure_ascii': False},
+                            status=201)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class AdDeleteView(DeleteView):
     model = AdsModel
     success_url = '/'
@@ -108,6 +124,7 @@ class AdDetailView(DetailView):
                 'description': ad.description,
                 'is_published': ad.is_published,
                 'category': ad.category.name,
+                'image': ad.image.url if ad.image else None,
             }
         except AdsModel.DoesNotExist:
             return JsonResponse({"error": "Not found"},
