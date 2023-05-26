@@ -6,8 +6,9 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  UpdateView)
+                                  UpdateView, View)
 from users.models import UserModel, LocModel
+from django.db.models import Count, Q
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -16,14 +17,15 @@ class UsersView(ListView):
 
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
-        # users = self.object_list
-        cur_page = int(request.GET.get('page', 1))
-        paginator = Paginator(self.object_list, settings.TOTAL_ON_PAGE)
-        page_objects = paginator.get_page(cur_page)
+        total_ads = Count("adsmodel", filter=Q(adsmodel__is_published=True))
+        users = self.object_list.annotate(total_ads=total_ads)
+        # cur_page = int(request.GET.get('page', 1))
+        # paginator = Paginator(self.object_list, settings.TOTAL_ON_PAGE)
+        # page_objects = paginator.get_page(cur_page)
 
         response = []
 
-        for user in page_objects:
+        for user in users:
             response.append({
                 'id': user.id,
                 'username': user.username,
@@ -32,11 +34,12 @@ class UsersView(ListView):
                 'role': user.role,
                 'age': user.age,
                 'locations': list(map(str, user.locations.all())),
+                'total_ads': user.total_ads,
             })
         return JsonResponse({'items': response,
-                             'page_number': page_objects.number,
-                             'total_pages': paginator.num_pages,
-                             'per_page': settings.TOTAL_ON_PAGE,
+                             # 'page_number': page_objects.number,
+                             # 'total_pages': paginator.num_pages,
+                             # 'per_page': settings.TOTAL_ON_PAGE,
                              },
                             safe=False,
                             json_dumps_params={'ensure_ascii': False},
@@ -53,7 +56,7 @@ class UserCreateView(CreateView):
         user_data = json.loads(request.body)
         locations = []
         for item in user_data['locations']:
-            loc_obj = LocModel.objects.get_or_create(name=item)
+            loc_obj, _ = LocModel.objects.get_or_create(name=item)
             locations.append(loc_obj)
 
         UserModel.objects.create(
@@ -89,7 +92,7 @@ class UserUpdateView(UpdateView):
         self.object.role = user_data['role']
         self.object.age = user_data['age']
         for item in user_data['locations']:
-            loc_obj = LocModel.objects.get_or_create(name=item)
+            loc_obj, _ = LocModel.objects.get_or_create(name=item)
             self.object.locations.add(loc_obj)
 
         self.object.save()

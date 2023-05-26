@@ -12,18 +12,20 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AdsView(ListView):
+    paginate_by = settings.TOTAL_ON_PAGE
     model = AdsModel
+    ordering = ['-price']
 
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
-        ads = self.object_list
-        # ads = self.object_list.select_related('category').select_related('author')
+        ads = self.object_list.select_related('category').select_related('author')
         cur_page = int(request.GET.get('page', 1))
         paginator = Paginator(ads, settings.TOTAL_ON_PAGE)
         page_objects = paginator.get_page(cur_page)
 
         response = []
 
+        # for ad in page_objects:
         for ad in page_objects:
             response.append({
                 'id': ad.id,
