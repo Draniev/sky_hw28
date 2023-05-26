@@ -34,7 +34,11 @@ class AdsView(ListView):
                 'category': ad.category.name,
                 'image': ad.image.url if ad.image else None,
             })
-        return JsonResponse(response,
+        return JsonResponse({'items': response,
+                             'page_number': page_objects.number,
+                             'total_pages': paginator.num_pages,
+                             'per_page': settings.TOTAL_ON_PAGE,
+                             },
                             safe=False,
                             json_dumps_params={'ensure_ascii': False},
                             status=200)
