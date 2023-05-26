@@ -15,14 +15,19 @@ class LocModel(models.Model):
 
 
 class UserModel(models.Model):
+    ROLE = [
+        ("member", "Пользователь"),
+        ("moderator", "Модератор"),
+        ("admin", "Администратор"),
+    ]
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     username = models.CharField(max_length=64)
     password = models.CharField(max_length=64)
     # member, moderator, admin,
-    role = models.CharField(max_length=16)
+    role = models.CharField(max_length=16, choices=ROLE, default="member")
     age = models.SmallIntegerField()
-    location = models.ForeignKey(LocModel, on_delete=models.DO_NOTHING)
+    locations = models.ManyToManyField(LocModel)
 
     def __str__(self) -> str:
         return self.username

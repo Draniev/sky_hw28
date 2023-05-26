@@ -1,13 +1,13 @@
 import json
 
 from ads.models import AdsModel, CatModel
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-from django.core.paginator import Paginator
-from django.conf import settings
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -16,9 +16,10 @@ class AdsView(ListView):
 
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
-        # ads = self.object_list
+        ads = self.object_list
+        # ads = self.object_list.select_related('category').select_related('author')
         cur_page = int(request.GET.get('page', 1))
-        paginator = Paginator(self.object_list, settings.TOTAL_ON_PAGE)
+        paginator = Paginator(ads, settings.TOTAL_ON_PAGE)
         page_objects = paginator.get_page(cur_page)
 
         response = []
