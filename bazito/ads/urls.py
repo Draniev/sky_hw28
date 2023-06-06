@@ -1,7 +1,10 @@
 from ads.views import (AdCreateView, AdDeleteView, AdDetailView,
-                       AdImageUpdateView, AdsView, AdUpdateView, CatCreateView,
-                       CatDeleteView, CatDetailView, CatsView, CatUpdateView)
+                       AdImageUpdateView, AdsView, AdUpdateView, CatViewSet)
 from django.urls import path
+from rest_framework import routers
+
+router = routers.SimpleRouter()
+router.register('cat', CatViewSet)
 
 urlpatterns = [
     path('', AdsView.as_view()),
@@ -10,9 +13,4 @@ urlpatterns = [
     path('<int:pk>/update/', AdUpdateView.as_view()),
     path('<int:pk>/update/image/', AdImageUpdateView.as_view()),
     path('<int:pk>/delete/', AdDeleteView.as_view()),
-    path('cat/', CatsView.as_view()),
-    path('cat/create/', CatCreateView.as_view()),
-    path('cat/<int:pk>/', CatDetailView.as_view()),
-    path('cat/<int:pk>/update/', CatUpdateView.as_view()),
-    path('cat/<int:pk>/delete/', CatDeleteView.as_view()),
-]
+] + router.urls

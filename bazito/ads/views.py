@@ -1,93 +1,87 @@
-import json
-
 from ads.models import AdsModel, CatModel
-from django.conf import settings
-from django.core.paginator import Paginator
+from ads.serializers import AdsCreateSerializer, AdsSerializer, CatSerializer
+from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
+from rest_framework import viewsets
+from rest_framework.generics import (CreateAPIView, DestroyAPIView,
+                                     ListAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdsView(ListView):
-    paginate_by = settings.TOTAL_ON_PAGE
-    model = AdsModel
-    ordering = ['-price']
+class CatViewSet(viewsets.ModelViewSet):
+    queryset = CatModel.objects.all()
+    serializer_class = CatSerializer
+
+
+class AdsView(ListAPIView):
+    queryset = AdsModel.objects.all()
+    serializer_class = AdsSerializer
 
     def get(self, request, *args, **kwargs):
-        super().get(request, *args, **kwargs)
-        ads = self.object_list.select_related('category').select_related('author')
-        cur_page = int(request.GET.get('page', 1))
-        paginator = Paginator(ads, settings.TOTAL_ON_PAGE)
-        page_objects = paginator.get_page(cur_page)
+        q_obj = None
 
-        response = []
+        cat_filter = request.GET.getlist('cat', None)
+        if cat_filter:
+            q_obj = Q(category__in=cat_filter)
 
-        # for ad in page_objects:
-        for ad in page_objects:
-            response.append({
-                'id': ad.id,
-                'name': ad.name,
-                'author': ad.author.username,
-                'price': ad.price,
-                'description': ad.description,
-                'is_published': ad.is_published,
-                'category': ad.category.name,
-                'image': ad.image.url if ad.image else None,
-            })
-        return JsonResponse({'items': response,
-                             'page_number': page_objects.number,
-                             'total_pages': paginator.num_pages,
-                             'per_page': settings.TOTAL_ON_PAGE,
-                             },
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=200)
+        text_filter = request.GET.getlist('text', None)
+        if text_filter:
+            for text in text_filter:
+                if q_obj:
+                    q_obj &= Q(name__icontains=text) | Q(
+                        description__icontains=text)
+                else:
+                    q_obj = Q(name__icontains=text) | Q(
+                        description__icontains=text)
 
+        loc_filter = request.GET.get('loc', None)
+        if loc_filter:
+            if q_obj:
+                q_obj &= Q(author__locations__name__icontains=loc_filter)
+            else:
+                q_obj = Q(author__locations__name__icontains=loc_filter)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdCreateView(CreateView):
-    model = AdsModel
-    fields = ['name', 'author_id', 'price',
-              'description', 'category_id', 'is_published']
+        price_from_filter = request.GET.get('price_from', None)
+        if price_from_filter:
+            if q_obj:
+                q_obj &= Q(price__gte=price_from_filter)
+            else:
+                q_obj = Q(price__gte=price_from_filter)
 
-    def post(self, request, *args, **kwargs):
-        ad_data = json.loads(request.body)
-        AdsModel.objects.create(
-            name=ad_data['name'],
-            author_id=ad_data['author_id'],
-            price=ad_data['price'],
-            description=ad_data['description'],
-            is_published=ad_data['is_published'],
-            category_id=ad_data['category_id'],
-        )
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
+        price_to_filter = request.GET.get('price_to', None)
+        if price_to_filter:
+            if q_obj:
+                q_obj &= Q(price__lte=price_to_filter)
+            else:
+                q_obj = Q(price__lte=price_to_filter)
+
+        if q_obj:
+            self.queryset = self.queryset.filter(q_obj)
+        return super().get(request, *args, **kwargs)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdUpdateView(UpdateView):
-    model = AdsView
-    fields = ['name', 'price', 'description', 'category_id', 'is_published']
+class AdCreateView(CreateAPIView):
+    queryset = AdsModel.objects.all()
+    serializer_class = AdsCreateSerializer
 
-    def post(self, request, *args, **kwargs):
-        super().post(request, *args, **kwargs)
-        ad_data = json.loads(request.body)
 
-        self.object.name = ad_data['name']
-        self.object.price = ad_data['price']
-        self.object.description = ad_data['description']
-        self.object.category_id = ad_data['category_id']
-        self.object.is_published = ad_data['is_published']
-        self.object.save()
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
+class AdUpdateView(UpdateAPIView):
+    queryset = AdsModel.objects.all()
+    serializer_class = AdsCreateSerializer
+
+
+class AdDeleteView(DestroyAPIView):
+    queryset = AdsModel.objects.all()
+    serializer_class = AdsSerializer
+
+
+class AdDetailView(RetrieveAPIView):
+    queryset = AdsModel.objects.all()
+    serializer_class = AdsSerializer
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -104,131 +98,3 @@ class AdImageUpdateView(UpdateView):
                             safe=False,
                             json_dumps_params={'ensure_ascii': False},
                             status=201)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class AdDeleteView(DeleteView):
-    model = AdsModel
-    success_url = '/'
-
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
-
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class AdDetailView(DetailView):
-    model = AdsModel
-
-    def get(self, request, *args, **kwargs):
-        super().get(request, *args, **kwargs)
-        try:
-            ad = self.get_object()
-            response = {
-                'id': ad.id,
-                'name': ad.name,
-                'author': ad.author.username,
-                'price': ad.price,
-                'description': ad.description,
-                'is_published': ad.is_published,
-                'category': ad.category.name,
-                'image': ad.image.url if ad.image else None,
-            }
-        except AdsModel.DoesNotExist:
-            return JsonResponse({"error": "Not found"},
-                                status=404)
-
-        return JsonResponse(response,
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=200)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatsView(ListView):
-    model = CatModel
-
-    def get(self, request, *args, **kwargs):
-        super().get(request, *args, **kwargs)
-
-        categories = self.object_list
-        response = []
-        for item in categories:
-            response.append({
-                'id': item.id,
-                'name': item.name
-            })
-        return JsonResponse(response,
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=200)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatCreateView(CreateView):
-    model = CatModel
-    fields = ['name']
-
-    def post(self, request, *args, **kwargs):
-        cat_data = json.loads(request.body)
-        CatModel.objects.create(name=cat_data['name'])
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatUpdateView(UpdateView):
-    model = CatModel
-    fields = ['name']
-
-    def post(self, request, *args, **kwargs):
-        super().post(request, *args, **kwargs)
-        cat_data = json.loads(request.body)
-
-        self.object.name = cat_data['name']
-        self.object.save()
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatDeleteView(DeleteView):
-    model = CatModel
-    success_url = '/'
-
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
-
-        return JsonResponse({'Status': 'OK'},
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=201)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatDetailView(DetailView):
-    model = CatModel
-
-    def get(self, request, *args, **kwargs):
-        try:
-            cat = self.get_object()
-            response = {
-                'id': cat.id,
-                'name': cat.name,
-            }
-        except CatModel.DoesNotExist:
-            return JsonResponse({"error": "Not found"},
-                                status=404)
-
-        return JsonResponse(response,
-                            safe=False,
-                            json_dumps_params={'ensure_ascii': False},
-                            status=200)
