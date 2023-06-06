@@ -5,7 +5,7 @@ from django.urls import path
 
 urlpatterns = [
     path('', AdsView.as_view()),
-    path('/create/', AdCreateView.as_view()),
+    path('create/', AdCreateView.as_view()),
     path('<int:pk>/', AdDetailView.as_view()),
     path('<int:pk>/update/', AdUpdateView.as_view()),
     path('<int:pk>/update/image/', AdImageUpdateView.as_view()),
