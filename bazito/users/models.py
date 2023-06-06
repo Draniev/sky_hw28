@@ -3,8 +3,8 @@ from django.db import models
 
 class LocModel(models.Model):
     name = models.CharField(max_length=1024)
-    lat = models.FloatField()
-    lng = models.FloatField()
+    lat = models.FloatField(blank=True)
+    lng = models.FloatField(blank=True)
 
     def __str__(self) -> str:
         return self.name
@@ -27,7 +27,7 @@ class UserModel(models.Model):
     # member, moderator, admin,
     role = models.CharField(max_length=16, choices=ROLE, default="member")
     age = models.SmallIntegerField()
-    locations = models.ManyToManyField(LocModel)
+    locations = models.ManyToManyField(LocModel, blank=True)
 
     def __str__(self) -> str:
         return self.username

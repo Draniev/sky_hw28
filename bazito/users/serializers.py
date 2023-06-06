@@ -1,9 +1,13 @@
 from rest_framework import serializers
-
 from users.models import LocModel, UserModel
 
 
 class LocSerializer(serializers.ModelSerializer):
+    # id = serializers.IntegerField()
+    # name = serializers.CharField(max_length=1024)
+    lat = serializers.FloatField(required=False)
+    lng = serializers.FloatField(required=False)
+
     class Meta:
         model = LocModel
         fields = '__all__'

@@ -1,10 +1,15 @@
 from django.db.models import Count, Q
-from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  UpdateView, View)
+from rest_framework import viewsets
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
                                      ListAPIView, UpdateAPIView)
 from users.models import LocModel, UserModel
-from users.serializers import UserCreateSerializer, UserViewSerializer
+from users.serializers import (LocSerializer, UserCreateSerializer,
+                               UserViewSerializer)
+
+
+class LocViewSet(viewsets.ModelViewSet):
+    queryset = LocModel.objects.all()
+    serializer_class = LocSerializer
 
 
 class UsersView(ListAPIView):
