@@ -19,6 +19,7 @@ from rest_framework.response import Response
 class CatViewSet(viewsets.ModelViewSet):
     queryset = CatModel.objects.all()
     serializer_class = CatSerializer
+    permission_classes = [ReadOnly | IsOwner | IsModerator]
 
 
 class AdsView(ListAPIView):
@@ -71,16 +72,19 @@ class AdsView(ListAPIView):
 class AdCreateView(CreateAPIView):
     queryset = AdsModel.objects.all()
     serializer_class = AdsCreateSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class AdUpdateView(UpdateAPIView):
     queryset = AdsModel.objects.all()
     serializer_class = AdsCreateSerializer
+    permission_classes = [IsOwner | IsModerator]
 
 
 class AdDeleteView(DestroyAPIView):
     queryset = AdsModel.objects.all()
     serializer_class = AdsSerializer
+    permission_classes = [IsOwner | IsModerator]
 
 
 class AdDetailView(RetrieveAPIView):
