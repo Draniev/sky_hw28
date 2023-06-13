@@ -1,7 +1,7 @@
-from rest_framework import serializers
-from users.serializers import UserViewSerializer
-
 from ads.models import AdsModel, CatModel, SelModel
+from rest_framework import serializers
+from users.models import UserModel
+from users.serializers import UserViewSerializer
 
 
 class CatSerializer(serializers.ModelSerializer):
@@ -39,9 +39,38 @@ class AdsCreateSerializer(serializers.ModelSerializer):
         exclude = ['image']
 
 
-class SelSerializer(serializers.ModelSerializer):
-    owner = UserViewSerializer
+class SelCreateSerializer(serializers.ModelSerializer):
+    # owner = UserViewSerializer
+    # ads = AdsSerializer(many=True)
+    owner = serializers.SlugRelatedField(
+        required=False,
+        queryset=UserModel.objects.all(),
+        slug_field='username',
+    )
+    ads = serializers.SlugRelatedField(
+        many=True,
+        required=False,
+        queryset=AdsModel.objects.all(),
+        slug_field='id',
+    )
+
+    # def is_valid(self, raise_exception=False):
+    #     # self.initial_data['owner'] = request.user.username
+    #     return super().is_valid(raise_exception=raise_exception)
+
+    class Meta:
+        model = SelModel
+        fields = '__all__'
+
+
+class SelViewSerializer(serializers.ModelSerializer):
+    # owner = UserViewSerializer
     ads = AdsSerializer(many=True)
+    owner = serializers.SlugRelatedField(
+        required=False,
+        queryset=UserModel.objects.all(),
+        slug_field='username',
+    )
 
     class Meta:
         model = SelModel

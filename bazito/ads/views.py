@@ -1,17 +1,19 @@
 from ads.models import AdsModel, CatModel, SelModel
+from ads.permissions import IsModerator, IsOwner, ReadOnly
 from ads.serializers import (AdsCreateSerializer, AdsSerializer, CatSerializer,
-                             SelSerializer)
+                             SelCreateSerializer, SelViewSerializer)
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
                                      ListAPIView, RetrieveAPIView,
                                      UpdateAPIView)
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 
 class CatViewSet(viewsets.ModelViewSet):
@@ -105,4 +107,37 @@ class AdImageUpdateView(UpdateView):
 
 class SelViewSet(viewsets.ModelViewSet):
     queryset = SelModel.objects.all()
-    serializer_class = SelSerializer
+    serializer_class = SelViewSerializer
+    permission_classes = [ReadOnly | IsOwner | IsModerator]
+    # permission_classes = [IsOwner]
+
+    def create(self, request, *args, **kwargs):
+        request.data['owner'] = request.user.username
+        serializer = SelCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        request.data['owner'] = request.user.username
+        instance = self.get_object()
+        # serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = SelCreateSerializer(
+            instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
