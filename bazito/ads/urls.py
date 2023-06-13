@@ -1,10 +1,12 @@
 from ads.views import (AdCreateView, AdDeleteView, AdDetailView,
-                       AdImageUpdateView, AdsView, AdUpdateView, CatViewSet)
+                       AdImageUpdateView, AdsView, AdUpdateView, CatViewSet,
+                       SelViewSet)
 from django.urls import path
 from rest_framework import routers
 
 router = routers.SimpleRouter()
 router.register('cat', CatViewSet)
+router.register('sel', SelViewSet)
 
 urlpatterns = [
     path('', AdsView.as_view()),

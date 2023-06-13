@@ -1,5 +1,6 @@
-from ads.models import AdsModel, CatModel
-from ads.serializers import AdsCreateSerializer, AdsSerializer, CatSerializer
+from ads.models import AdsModel, CatModel, SelModel
+from ads.serializers import (AdsCreateSerializer, AdsSerializer, CatSerializer,
+                             SelSerializer)
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -10,6 +11,7 @@ from rest_framework import viewsets
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
                                      ListAPIView, RetrieveAPIView,
                                      UpdateAPIView)
+from rest_framework.permissions import IsAuthenticated
 
 
 class CatViewSet(viewsets.ModelViewSet):
@@ -82,6 +84,7 @@ class AdDeleteView(DestroyAPIView):
 class AdDetailView(RetrieveAPIView):
     queryset = AdsModel.objects.all()
     serializer_class = AdsSerializer
+    permission_classes = [IsAuthenticated]
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -98,3 +101,8 @@ class AdImageUpdateView(UpdateView):
                             safe=False,
                             json_dumps_params={'ensure_ascii': False},
                             status=201)
+
+
+class SelViewSet(viewsets.ModelViewSet):
+    queryset = SelModel.objects.all()
+    serializer_class = SelSerializer

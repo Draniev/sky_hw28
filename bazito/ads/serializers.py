@@ -1,6 +1,7 @@
-from ads.models import AdsModel, CatModel
 from rest_framework import serializers
-from users.serializers import LocSerializer, UserViewSerializer
+from users.serializers import UserViewSerializer
+
+from ads.models import AdsModel, CatModel, SelModel
 
 
 class CatSerializer(serializers.ModelSerializer):
@@ -36,3 +37,12 @@ class AdsCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdsModel
         exclude = ['image']
+
+
+class SelSerializer(serializers.ModelSerializer):
+    owner = UserViewSerializer
+    ads = AdsSerializer(many=True)
+
+    class Meta:
+        model = SelModel
+        fields = '__all__'

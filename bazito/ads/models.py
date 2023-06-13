@@ -28,3 +28,16 @@ class AdsModel(models.Model):
     class Meta:
         verbose_name = 'Объявление'
         verbose_name_plural = 'Объявления'
+
+
+class SelModel(models.Model):
+    name = models.CharField(max_length=255, default='favorites')
+    owner = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    ads = models.ManyToManyField(AdsModel, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.owner.username} – {self.name}"
+
+    class Meta:
+        verbose_name = 'Подборка'
+        verbose_name_plural = 'Подборки'
