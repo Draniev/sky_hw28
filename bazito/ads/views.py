@@ -73,11 +73,23 @@ class AdCreateView(CreateAPIView):
     serializer_class = AdsCreateSerializer
     permission_classes = [IsAuthenticated]
 
+    def post(self, request, *args, **kwargs):
+        request.data['author'] = request.user.username
+        return super().post(request, *args, **kwargs)
+
 
 class AdUpdateView(UpdateAPIView):
     queryset = AdsModel.objects.all()
     serializer_class = AdsCreateSerializer
     permission_classes = [IsOwner | IsModerator]
+
+    def put(self, request, *args, **kwargs):
+        request.data['author'] = request.user.username
+        return super().put(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        request.data['author'] = request.user.username
+        return super().patch(request, *args, **kwargs)
 
 
 class AdDeleteView(DestroyAPIView):

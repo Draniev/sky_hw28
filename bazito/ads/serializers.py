@@ -41,7 +41,11 @@ class AdsImageSerializer(serializers.ModelSerializer):
 
 class AdsCreateSerializer(serializers.ModelSerializer):
     is_published = serializers.BooleanField(validators=[published_validator])
-    author = serializers.CurrentUserDefault()
+    author = serializers.SlugRelatedField(
+        slug_field="username",
+        required=False,
+        queryset=UserModel.objects.all()
+    )
 
     class Meta:
         model = AdsModel
