@@ -1,5 +1,16 @@
+from datetime import date
+
 from rest_framework import serializers
 from users.models import LocModel, UserModel
+
+
+def check_min_age(value: date):
+    MIN_AGE = 9
+    today = date.today()
+    age = today - value
+    if age.days // 365 < MIN_AGE:
+        raise serializers.ValidationError(
+            'Минимальный возраст регистрации – 9 лет')
 
 
 class LocSerializer(serializers.ModelSerializer):
@@ -29,6 +40,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         queryset=LocModel.objects.all(),
         slug_field='name'
     )
+    birth_date = serializers.DateField(validators=[check_min_age])
 
     class Meta:
         model = UserModel

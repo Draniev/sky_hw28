@@ -1,5 +1,16 @@
-from django.db import models
+from datetime import date
+
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db import models
+
+
+def check_min_age(value: date):
+    MIN_AGE = 9
+    today = date.today()
+    age = today - value
+    if age.days // 365 < MIN_AGE:
+        raise ValidationError('Минимальный возраст регистрации – 9 лет')
 
 
 class LocModel(models.Model):
@@ -29,6 +40,9 @@ class UserModel(AbstractUser):
     role = models.CharField(max_length=16, choices=ROLE, default="member")
     age = models.SmallIntegerField(blank=True, null=True)
     locations = models.ManyToManyField(LocModel, blank=True)
+    # birth_date = models.DateField(validators=[check_min_age])
+    birth_date = models.DateField()
+    email = models.EmailField(unique=True)
 
     def __str__(self) -> str:
         return self.username

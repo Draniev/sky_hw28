@@ -4,6 +4,12 @@ from users.models import UserModel
 from users.serializers import UserViewSerializer
 
 
+def published_validator(data: bool):
+    if data:
+        raise serializers.ValidationError(
+            'Нельзя создавать сразу опубликованные объявления')
+
+
 class CatSerializer(serializers.ModelSerializer):
     class Meta:
         model = CatModel
@@ -34,6 +40,9 @@ class AdsImageSerializer(serializers.ModelSerializer):
 
 
 class AdsCreateSerializer(serializers.ModelSerializer):
+    is_published = serializers.BooleanField(validators=[published_validator])
+    author = serializers.CurrentUserDefault()
+
     class Meta:
         model = AdsModel
         exclude = ['image']
