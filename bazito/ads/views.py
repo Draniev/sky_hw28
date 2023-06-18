@@ -74,7 +74,10 @@ class AdCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        _mutable = request.data._mutable
+        request.data._mutable = True
         request.data['author'] = request.user.username
+        request.data._mutable = _mutable
         return super().post(request, *args, **kwargs)
 
 
@@ -127,7 +130,10 @@ class SelViewSet(viewsets.ModelViewSet):
     # permission_classes = [IsOwner]
 
     def create(self, request, *args, **kwargs):
+        _mutable = request.data._mutable
+        request.data._mutable = True
         request.data['owner'] = request.user.username
+        request.data._mutable = _mutable
         serializer = SelCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
