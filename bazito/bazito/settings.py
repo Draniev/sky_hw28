@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'ads',
     'users',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -149,6 +150,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 AUTH_USER_MODEL = 'users.UserModel'
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Bazito API',
+    'DESCRIPTION': 'A simple bulletin board for people',
+    'VERSION': '1.0.0',
+}
